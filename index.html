@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Diagnostic Test: Forms 1-3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .split-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 20px;
+            height: 500px;
+        }
+
+        .scroll-panel {
+            overflow-y: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .question-card {
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .question-card:hover {
+            border-left: 4px solid #3b82f6;
+            background-color: #f1f5f9;
+        }
+
+        .word-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+            border-radius: 9999px;
+            font-weight: 500;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .error-text-box {
+            font-family: 'Times New Roman', Times, serif; /* Exam-style font for error correction */
+            font-size: 1.1rem;
+            line-height: 2;
+        }
+
+        .hidden { display: none; }
+        
+        @media (max-width: 768px) {
+            .split-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .scroll-panel {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="test-container" class="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold uppercase tracking-tight">English Diagnostic Test</h1>
+            <p class="text-blue-100 mt-1">Adaptive Assessment for Forms 1, 2 & 3</p>
+        </div>
+
+        <!-- Student Info -->
+        <div id="student-info" class="p-8 space-y-4">
+            <h2 class="text-xl font-semibold text-slate-800 border-b pb-2">Student Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Full Name</label>
+                    <input type="text" id="student-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Form</label>
+                    <select id="student-form" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                        <option value="form1">Form 1</option>
+                        <option value="form2">Form 2</option>
+                        <option value="form3">Form 3</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="startTest()" class="mt-6 w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">START TEST</button>
+        </div>
+
+        <!-- Main Test UI (Initially Hidden) -->
+        <div id="main-test" class="hidden flex flex-col h-[85vh]">
+            
+            <!-- Content Area -->
+            <div class="flex-grow overflow-y-auto p-6 bg-slate-50 space-y-12">
+                
+                <!-- Section: Grammar -->
+                <div id="section-grammar" class="section-container space-y-6">
+                    <div class="border-b-2 border-blue-600 pb-2 mb-4">
+                        <h3 class="text-xl font-bold text-blue-800">Part 1: Language Awareness (Grammar)</h3>
+                    </div>
+                    <p class="text-sm text-slate-700 mb-4 bg-blue-50 p-3 rounded border border-blue-100 italic"><b>Instruction:</b> Read the questions carefully and choose the correct grammatical option (A, B, C, or D) to complete the sentence.</p>
+                    <div id="grammar-questions" class="space-y-4"></div>
+                </div>
+
+                <!-- Section: Vocab -->
+                <div id="section-vocab" class="section-container space-y-6 pt-6">
+                    <div class="border-b-2 border-blue-600 pb-2 mb-4">
+                        <h3 class="text-xl font-bold text-blue-800">Part 2: Vocabulary</h3>
+                    </div>
+                    <p class="text-sm text-slate-700 mb-4 bg-blue-50 p-3 rounded border border-blue-100 italic"><b>Instruction:</b> Choose the word that has the closest meaning to the bold word, or best completes the sentence.</p>
+                    <div id="vocab-questions" class="space-y-4"></div>
+                </div>
+
+                <!-- NEW Section: Error Correction (UASA Part 2 Style) -->
+                <div id="section-error-correction" class="section-container space-y-6 pt-6">
+                    <div class="border-b-2 border-blue-600 pb-2 mb-4">
+                        <h3 class="text-xl font-bold text-blue-800">Part 3: Error Correction</h3>
+                    </div>
+                    <p class="text-sm text-slate-700 mb-4 bg-blue-50 p-3 rounded border border-blue-100 italic"><b>Instruction:</b> Read the text below. There are grammatical errors which have been underlined and numbered. Type the correct word for each error in the boxes below. Ensure correct spelling.</p>
+                    
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div id="error-text" class="error-text-box bg-slate-50 p-6 rounded border border-slate-200 mb-6 text-slate-800 text-justify">
+                            <!-- Injected dynamically -->
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4" id="error-inputs">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section: Reading (SPLIT SCREEN) -->
+                <div id="section-reading" class="section-container pt-6">
+                    <div class="border-b-2 border-blue-600 pb-2 mb-4">
+                        <h3 class="text-xl font-bold text-blue-800">Part 4: Reading Comprehension</h3>
+                    </div>
+                    <p class="text-sm text-slate-700 mb-4 bg-blue-50 p-3 rounded border border-blue-100 italic"><b>Instruction:</b> Read the passage carefully and answer the multiple-choice questions on the right.</p>
+                    <div class="split-container">
+                        <!-- Left Panel: Text -->
+                        <div class="scroll-panel border-r prose prose-slate" id="reading-text-container">
+                            <!-- Injected dynamically -->
+                        </div>
+                        <!-- Right Panel: Questions -->
+                        <div id="reading-questions" class="scroll-panel space-y-6"></div>
+                    </div>
+                </div>
+
+                <!-- Section: Writing -->
+                <div id="section-writing" class="section-container pt-6 pb-8">
+                    <div class="border-b-2 border-blue-600 pb-2 mb-4">
+                        <h3 class="text-xl font-bold text-blue-800">Part 5: Writing Proficiency</h3>
+                    </div>
+                    
+                    <div id="writing-content-container" class="space-y-6">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Navigation -->
+            <div class="bg-white border-t p-4 flex justify-between items-center px-8 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-10 relative">
+                <p class="text-sm font-medium text-slate-500">Please complete all sections above before submitting.</p>
+                <button id="submit-btn" onclick="finishTest()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition transform hover:scale-105">FINISH & SUBMIT</button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="results" class="hidden p-8 text-center animate-fade-in">
+            <div class="mb-6">
+                <div class="inline-block p-4 rounded-full bg-blue-100 mb-4">
+                    <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h2 class="text-3xl font-bold text-slate-800">Test Completed!</h2>
+                <p class="text-slate-600 mt-2">Well done, <span id="res-name" class="font-bold">Student</span>. Here is your diagnostic profile for <span id="res-form" class="font-bold text-blue-600">Form</span>.</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <p class="text-xs text-blue-600 font-semibold uppercase">Grammar</p>
+                    <p id="score-grammar" class="text-xl font-bold text-slate-800">0 / 15</p>
+                </div>
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                    <p class="text-xs text-indigo-600 font-semibold uppercase">Vocab</p>
+                    <p id="score-vocab" class="text-xl font-bold text-slate-800">0 / 15</p>
+                </div>
+                <div class="bg-rose-50 p-4 rounded-xl border border-rose-100">
+                    <p class="text-xs text-rose-600 font-semibold uppercase flex flex-col items-center">Error Correct</p>
+                    <p id="score-error" class="text-xl font-bold text-slate-800">0 / 8</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                    <p class="text-xs text-purple-600 font-semibold uppercase">Reading</p>
+                    <p id="score-reading" class="text-xl font-bold text-slate-800">0 / 10</p>
+                </div>
+                <div class="bg-teal-50 p-4 rounded-xl border border-teal-100">
+                    <p class="text-xs text-teal-600 font-semibold uppercase flex flex-col items-center">Writing <span>(Scramble)</span></p>
+                    <p id="score-writing" class="text-xl font-bold text-slate-800">0 / 5</p>
+                </div>
+            </div>
+
+            <div class="bg-slate-100 p-6 rounded-xl text-left">
+                <h4 class="font-bold text-slate-800 mb-2">Teacher's Quick Report:</h4>
+                <div id="teacher-analysis" class="text-slate-700 space-y-2 text-sm leading-relaxed mb-6"></div>
+                
+                <h4 class="font-bold text-slate-800 mb-2 border-t border-slate-300 pt-4">Teacher Review Needed (Sentences):</h4>
+                <div id="manual-feedback" class="text-slate-700 space-y-3 text-sm leading-relaxed bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                    <!-- Sentences injected here -->
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="mt-8 text-blue-600 font-semibold hover:underline">Retake Test (Clear Data)</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA DICTIONARY --- //
+        const testData = {
+            'form1': {
+                grammar: [
+                    { q: "I ______ a student at this school.", a: "a", o: ["am", "is", "are", "be"] },
+                    { q: "She ______ an apple every morning.", a: "c", o: ["eat", "eating", "eats", "ate"] },
+                    { q: "They ______ to the park yesterday.", a: "b", o: ["go", "went", "goes", "going"] },
+                    { q: "______ is your favorite color?", a: "b", o: ["Who", "What", "Where", "When"] },
+                    { q: "My cat ______ sleeping on the sofa right now.", a: "a", o: ["is", "are", "am", "were"] },
+                    { q: "We do not ______ classes on Sunday.", a: "a", o: ["have", "has", "had", "having"] },
+                    { q: "He placed the book ______ the table.", a: "b", o: ["in", "on", "at", "under"] },
+                    { q: "Please pass ______ the salt.", a: "c", o: ["I", "my", "me", "mine"] },
+                    { q: "There ______ many apples in the basket.", a: "b", o: ["is", "are", "was", "am"] },
+                    { q: "She can ______ very well.", a: "a", o: ["sing", "sings", "sang", "singing"] },
+                    { q: "Look ______ the beautiful birds!", a: "c", o: ["in", "on", "at", "to"] },
+                    { q: "I ______ my homework last night.", a: "c", o: ["do", "does", "did", "done"] },
+                    { q: "He is taller ______ his brother.", a: "b", o: ["then", "than", "that", "this"] },
+                    { q: "______ they like to play football?", a: "a", o: ["Do", "Does", "Are", "Is"] },
+                    { q: "This is ______ house.", a: "b", o: ["we", "our", "us", "ours"] }
+                ],
+                vocab: [
+                    { q: "The opposite of 'hot' is ______.", a: "b", o: ["warm", "cold", "boiling", "sunny"] },
+                    { q: "A person who teaches is a ______.", a: "c", o: ["student", "doctor", "teacher", "driver"] },
+                    { q: "You wear these on your feet.", a: "b", o: ["gloves", "shoes", "hats", "shirts"] },
+                    { q: "An elephant is a very ______ animal.", a: "a", o: ["big", "small", "tiny", "short"] },
+                    { q: "We use our eyes to ______.", a: "c", o: ["hear", "smell", "see", "taste"] },
+                    { q: "The color of the sky on a clear day is ______.", a: "b", o: ["red", "blue", "green", "yellow"] },
+                    { q: "A ______ has four wheels and an engine.", a: "c", o: ["bicycle", "boat", "car", "plane"] },
+                    { q: "You sleep in a ______.", a: "a", o: ["bed", "chair", "table", "desk"] },
+                    { q: "The opposite of 'happy' is ______.", a: "b", o: ["angry", "sad", "tired", "excited"] },
+                    { q: "We eat breakfast in the ______.", a: "a", o: ["morning", "afternoon", "evening", "night"] },
+                    { q: "A cat likes to drink ______.", a: "c", o: ["juice", "coffee", "milk", "tea"] },
+                    { q: "The day after Monday is ______.", a: "b", o: ["Sunday", "Tuesday", "Wednesday", "Friday"] },
+                    { q: "You use a ______ to cut paper.", a: "c", o: ["pencil", "ruler", "scissors", "eraser"] },
+                    { q: "The opposite of 'fast' is ______.", a: "a", o: ["slow", "quick", "rapid", "speedy"] },
+                    { q: "A bird can ______ in the sky.", a: "c", o: ["swim", "run", "fly", "jump"] }
+                ],
+                errorCorrection: {
+                    text: "Last weekend, my family and I <b>(0) <u>goes</u></b> to the beach. We <b>(1) <u>packing</u></b> some sandwiches and water. The weather <b>(2) <u>are</u></b> very sunny. My brother built a big sandcastle <b>(3) <u>in</u></b> the beach. I collected some beautiful <b>(4) <u>shell</u></b>. Later, we swam in the sea. The water was cold <b>(5) <u>or</u></b> refreshing. After swimming, we felt very <b>(6) <u>hunger</u></b>. We ate our food quickly. Then, my father <b>(7) <u>buy</u></b> us some ice cream. It was <b>(8) <u>a</u></b> amazing day.",
+                    example: "went",
+                    answers: [
+                        ["packed"], 
+                        ["was"], 
+                        ["on"], 
+                        ["shells"], 
+                        ["and"], 
+                        ["hungry"], 
+                        ["bought"], 
+                        ["an"]
+                    ]
+                },
+                readingText: {
+                    title: "A Trip to the Zoo",
+                    content: `Last Saturday, Ali and his family went to the national zoo. They woke up early and packed sandwiches, apples, and bottles of water for lunch. They arrived at the zoo at 9:00 a.m. <br><br> First, they saw the monkeys swinging from the trees. The monkeys were very loud and funny. Next, they visited the elephant enclosure. Ali fed a carrot to a baby elephant. The elephant's trunk was long and grey. <br><br> In the afternoon, they sat by the large lake to eat their sandwiches. They watched the ducks swim in the water. They felt tired but very happy. They went home at 4:00 p.m.`
+                },
+                reading: [
+                    { q: "When did Ali go to the zoo?", a: "b", o: ["Friday", "Saturday", "Sunday", "Monday"] },
+                    { q: "Who did Ali go with?", a: "a", o: ["His family", "His friends", "His school", "Alone"] },
+                    { q: "What did they pack for lunch besides sandwiches and water?", a: "b", o: ["Noodles", "Apples", "Rice", "Burgers"] },
+                    { q: "What time did they arrive?", a: "a", o: ["9:00 a.m.", "10:00 a.m.", "12:00 p.m.", "4:00 p.m."] },
+                    { q: "Which animal did they see first?", a: "c", o: ["Elephants", "Lions", "Monkeys", "Ducks"] },
+                    { q: "What were the monkeys doing?", a: "a", o: ["Swinging from trees", "Sleeping", "Eating bananas", "Swimming"] },
+                    { q: "What color was the elephant's trunk?", a: "c", o: ["Brown", "Black", "Grey", "White"] },
+                    { q: "Where did they eat lunch?", a: "b", o: ["In a restaurant", "By the lake", "In the car", "At home"] },
+                    { q: "What did they watch while eating?", a: "d", o: ["Monkeys", "Elephants", "People", "Ducks"] },
+                    { q: "How did they feel at the end of the day?", a: "b", o: ["Angry and sad", "Tired but happy", "Bored", "Scared"] }
+                ],
+                writing: {
+                    scramble: [
+                        { words: ["I", "apples.", "like"], a: "I like apples." },
+                        { words: ["goes", "She", "school.", "to"], a: "She goes to school." },
+                        { words: ["are", "They", "now.", "football", "playing"], a: "They are playing football now." },
+                        { words: ["everyday.", "cooks", "food", "mother", "delicious", "My"], a: "My mother cooks delicious food everyday." },
+                        { words: ["sleeping", "is", "cat", "the", "under", "black", "The", "table."], a: "The black cat is sleeping under the table." }
+                    ],
+                    sentenceWords: ["happy", "family", "school", "friend", "play"]
+                }
+            },
+            
+            'form2': {
+                grammar: [
+                    { q: "They ______ watching a movie when the lights went out.", a: "c", o: ["was", "is", "were", "are"] },
+                    { q: "If it rains tomorrow, we ______ the picnic.", a: "b", o: ["cancel", "will cancel", "cancelled", "would cancel"] },
+                    { q: "This is the ______ book I have ever read.", a: "c", o: ["good", "well", "best", "better"] },
+                    { q: "My father ______ in this company for ten years.", a: "c", o: ["works", "worked", "has worked", "is working"] },
+                    { q: "Neither Ali ______ his friends are coming to the party.", a: "b", o: ["or", "nor", "and", "but"] },
+                    { q: "The cake was ______ delicious that everyone asked for a second piece.", a: "b", o: ["very", "so", "too", "such"] },
+                    { q: "You ______ wear a helmet when riding a bicycle for safety.", a: "a", o: ["must", "might", "could", "may"] },
+                    { q: "He is the boy ______ won the science competition.", a: "d", o: ["which", "whose", "whom", "who"] },
+                    { q: "______ of the two students won the prize?", a: "b", o: ["Who", "Which", "Whose", "Whom"] },
+                    { q: "I ______ my keys this morning.", a: "b", o: ["lose", "lost", "have lost", "am losing"] },
+                    { q: "She has been studying ______ 8 o'clock.", a: "a", o: ["since", "for", "from", "at"] },
+                    { q: "If I ______ a bird, I would fly around the world.", a: "b", o: ["was", "were", "am", "be"] },
+                    { q: "The students ______ playing football when it started to rain.", a: "b", o: ["was", "were", "are", "have"] },
+                    { q: "Have you ______ visited London?", a: "b", o: ["never", "ever", "yet", "already"] },
+                    { q: "He speaks English fluently, ______?", a: "c", o: ["is he", "does he", "doesn't he", "isn't he"] }
+                ],
+                vocab: [
+                    { q: "The weather today is <b>gloomy</b>.", a: "c", o: ["bright", "sunny", "dark/depressing", "windy"] },
+                    { q: "It is <b>essential</b> to drink enough water.", a: "b", o: ["optional", "necessary", "difficult", "rare"] },
+                    { q: "She was <b>delighted</b> with the results.", a: "c", o: ["sad", "angry", "happy", "confused"] },
+                    { q: "We need to <b>reduce</b> our electricity usage.", a: "b", o: ["increase", "lower", "keep", "waste"] },
+                    { q: "The student was <b>punctual</b> for class.", a: "b", o: ["early", "on time", "late", "messy"] },
+                    { q: "The climber reached the <b>summit</b> of the mountain.", a: "c", o: ["base", "middle", "top", "side"] },
+                    { q: "That store offers a wide <b>variety</b> of goods.", a: "a", o: ["range", "set", "pile", "stock"] },
+                    { q: "The instructions were very <b>vague</b>.", a: "c", o: ["clear", "long", "unclear", "short"] },
+                    { q: "He <b>exhibited</b> great courage.", a: "b", o: ["hid", "showed", "lost", "bought"] },
+                    { q: "We must <b>preserve</b> our environment.", a: "b", o: ["destroy", "protect", "study", "ignore"] },
+                    { q: "The <b>consequence</b> of being late is detention.", a: "a", o: ["result", "cause", "reason", "part"] },
+                    { q: "She is very <b>ambitious</b> about her career.", a: "b", o: ["lazy", "driven", "shy", "funny"] },
+                    { q: "The noise was <b>deafening</b>.", a: "c", o: ["quiet", "soft", "loud", "distant"] },
+                    { q: "He <b>reluctantly</b> agreed to help.", a: "c", o: ["happily", "quickly", "unwillingly", "easily"] },
+                    { q: "The two teams were <b>rivals</b>.", a: "b", o: ["friends", "competitors", "partners", "neighbors"] }
+                ],
+                errorCorrection: {
+                    text: "Dinosaurs lived on Earth millions of years ago. They <b>(0) <u>is</u></b> fascinating creatures. Scientists who study them <b>(1) <u>is</u></b> called palaeontologists. They learn about dinosaurs by <b>(2) <u>examine</u></b> fossils. Fossils are the remains <b>(3) <u>from</u></b> animals or plants preserved in rock. Some dinosaurs were huge, <b>(4) <u>so</u></b> others were as small as chickens. A few dinosaurs were carnivores, meaning they <b>(5) <u>eating</u></b> meat. The T-Rex is the most famous carnivore <b>(6) <u>who</u></b> lived during that time. Other dinosaurs were herbivores and only ate <b>(7) <u>leaf</u></b>. Today, we can see dinosaur skeletons in <b>(8) <u>much</u></b> museums around the world.",
+                    example: "were",
+                    answers: [
+                        ["are"], 
+                        ["examining"], 
+                        ["of"], 
+                        ["but", "while", "whereas"], 
+                        ["ate"], 
+                        ["which", "that"], 
+                        ["leaves"], 
+                        ["many"]
+                    ]
+                },
+                readingText: {
+                    title: "The Annual Sports Day",
+                    content: `The annual school sports day was held last Saturday. Despite the threat of heavy rain in the early morning, the atmosphere was highly energetic. Students from all three forms participated in events ranging from the 100m sprint to the long jump. The school field was decorated with colorful flags representing the four sport houses: Red, Blue, Green, and Yellow. <br><br> The highlight of the day was the 4x100m relay race, which Form 3 won by a narrow margin against Form 2. The crowd cheered loudly as the final runner crossed the finish line. After the events, the principal congratulated all students for their sportsmanship. He reminded them that physical health is just as important as academic success. <br><br> To end the day, a special prize-giving ceremony was held in the school hall where the 'Overall Champion House' was announced to loud cheers. The Blue House took the trophy home this year.`
+                },
+                reading: [
+                    { q: "When was the sports day held?", a: "b", o: ["Friday", "Saturday", "Sunday", "Monday"] },
+                    { q: "What was the weather concern in the early morning?", a: "c", o: ["Extreme heat", "High humidity", "Heavy rain", "Strong wind"] },
+                    { q: "How many sport houses were there?", a: "b", o: ["Three", "Four", "Five", "Six"] },
+                    { q: "Which event is considered the highlight of the day?", a: "c", o: ["100m sprint", "Long jump", "4x100m relay race", "High jump"] },
+                    { q: "Who won the relay race?", a: "c", o: ["Form 1", "Form 2", "Form 3", "The teachers"] },
+                    { q: "How did the winners of the relay race secure their victory?", a: "b", o: ["By a wide margin", "By a narrow margin", "By default", "They tied"] },
+                    { q: "What did the principal emphasize in his speech?", a: "c", o: ["Sports are more important than studies", "Only winning matters", "Health and studies are equally important", "Students must study harder"] },
+                    { q: "What does the word 'annual' mean in the text?", a: "c", o: ["Happening once a month", "Happening every day", "Happening once a year", "Happening every week"] },
+                    { q: "Where was the prize-giving ceremony held?", a: "b", o: ["On the field", "In the school hall", "In the canteen", "In the classrooms"] },
+                    { q: "Which house won the Overall Champion trophy?", a: "b", o: ["Red House", "Blue House", "Green House", "Yellow House"] }
+                ],
+                writing: {
+                    scramble: [
+                        { words: ["yesterday.", "museum", "visited", "We", "the"], a: "We visited the museum yesterday." },
+                        { words: ["book.", "an", "reading", "is", "She", "interesting"], a: "She is reading an interesting book." },
+                        { words: ["yet?", "homework", "your", "finished", "you", "Have"], a: "Have you finished your homework yet?" },
+                        { words: ["stay", "home.", "we", "rains,", "it", "If", "will", "at"], a: "If it rains, we will stay at home." },
+                        { words: ["rang.", "the", "test", "taking", "were", "students", "bell", "a", "The", "when"], a: "The students were taking a test when the bell rang." }
+                    ],
+                    sentenceWords: ["environment", "delicious", "carefully", "improve", "usually"]
+                }
+            },
+            
+            'form3': {
+                grammar: [
+                    { q: "I ______ my homework yet.", a: "b", o: ["don't finish", "haven't finished", "didn't finish", "am not finishing"] },
+                    { q: "If it rains tomorrow, we ______ the match.", a: "c", o: ["cancel", "cancelled", "will cancel", "would cancel"] },
+                    { q: "The letter ______ by the headmaster yesterday.", a: "b", o: ["signed", "was signed", "is signed", "was signing"] },
+                    { q: "This is the boy ______ won the spelling bee.", a: "a", o: ["who", "which", "whose", "whom"] },
+                    { q: "You ______ wear a helmet when riding a motorcycle.", a: "d", o: ["can", "might", "may", "must"] },
+                    { q: "She is ______ than her sister.", a: "b", o: ["smart", "smarter", "smartest", "more smart"] },
+                    { q: "______ it was raining heavily, they continued playing football.", a: "c", o: ["Because", "However", "Although", "Therefore"] },
+                    { q: "While I ______ to school, I saw an accident.", a: "b", o: ["walked", "was walking", "walks", "am walking"] },
+                    { q: "Have you ______ been to Sabah?", a: "a", o: ["ever", "never", "yet", "already"] },
+                    { q: "They ______ in this town since 2015.", a: "c", o: ["live", "lived", "have lived", "are living"] },
+                    { q: "We should ______ our environment from pollution.", a: "d", o: ["protects", "protecting", "protected", "protect"] },
+                    { q: "The movie was so ______ that I fell asleep.", a: "b", o: ["bored", "boring", "bore", "bores"] },
+                    { q: "He usually ______ basketball on weekends.", a: "c", o: ["play", "playing", "plays", "played"] },
+                    { q: "I am interested ______ joining the science club.", a: "a", o: ["in", "on", "at", "for"] },
+                    { q: "She is a very good student, ______?", a: "d", o: ["is she", "does she", "doesn't she", "isn't she"] }
+                ],
+                vocab: [
+                    { q: "The weather outside was very <b>freezing</b>.", a: "c", o: ["warm", "sunny", "cold", "windy"] },
+                    { q: "The students were <b>exhausted</b> after the long marathon.", a: "a", o: ["very tired", "very happy", "very angry", "very sad"] },
+                    { q: "He needs to <b>purchase</b> some new shoes for P.E. class.", a: "b", o: ["clean", "buy", "sell", "borrow"] },
+                    { q: "The museum is filled with <b>ancient</b> artifacts.", a: "d", o: ["expensive", "beautiful", "new", "very old"] },
+                    { q: "They had a great <b>opportunity</b> to meet the famous author.", a: "a", o: ["chance", "problem", "idea", "time"] },
+                    { q: "Please <b>assist</b> the old lady with her heavy bags.", a: "c", o: ["watch", "ignore", "help", "leave"] },
+                    { q: "The teacher was <b>furious</b> because nobody did the homework.", a: "b", o: ["happy", "very angry", "sad", "confused"] },
+                    { q: "We must <b>reduce</b> the amount of plastic we use every day.", a: "a", o: ["decrease", "increase", "buy", "keep"] },
+                    { q: "I am sorry, but your answers to the math questions are <b>incorrect</b>.", a: "d", o: ["perfect", "good", "clear", "wrong"] },
+                    { q: "She felt <b>miserable</b> when she failed her driving test.", a: "b", o: ["excited", "sad", "proud", "brave"] },
+                    { q: "The new school hall is very <b>spacious</b>.", a: "c", o: ["small", "clean", "large", "dark"] },
+                    { q: "That is a <b>brilliant</b> idea for our science project!", a: "a", o: ["excellent", "bad", "boring", "funny"] },
+                    { q: "Can you <b>predict</b> what will happen at the end of the movie?", a: "b", o: ["draw", "guess", "write", "change"] },
+                    { q: "The food at the new restaurant is very <b>tasty</b>.", a: "c", o: ["expensive", "hot", "delicious", "bad"] },
+                    { q: "It is <b>polite</b> to say 'thank you' when someone helps you.", a: "d", o: ["rude", "funny", "strange", "courteous"] }
+                ],
+                errorCorrection: {
+                    text: "The internet has changed the way we live. It provides us <b>(0) <u>to</u></b> access to vast amounts of information. Today, teenagers use the internet mainly <b>(1) <u>for</u></b> communicate with friends. Social media platforms have become very <b>(2) <u>popularity</u></b>. However, spending too much time online can <b>(3) <u>has</u></b> negative effects. It might lead to a lack of physical <b>(4) <u>active</u></b>. Furthermore, users must be careful about cyberbullying, <b>(5) <u>who</u></b> is a growing problem. Experts advise parents to monitor <b>(6) <u>they</u></b> children's screen time. Setting limits helps to ensure that teenagers <b>(7) <u>maintains</u></b> a healthy balance between the digital world and real <b>(8) <u>living</u></b>.",
+                    example: "with",
+                    answers: [
+                        ["to", "communicating"], // accept either fixing 'for' to 'to' OR 'communicate' context
+                        ["popular"], 
+                        ["have"], 
+                        ["activity"], 
+                        ["which", "that"], 
+                        ["their"], 
+                        ["maintain"], 
+                        ["life"]
+                    ]
+                },
+                readingText: {
+                    title: "Teenagers and Social Media",
+                    content: `Social media has become a big part of teenagers' lives today. Platforms like Instagram, TikTok, and Facebook allow young people to talk to their friends, share photos, and learn about what is happening in the world. It is very easy to connect with someone who lives in another country. Social media also helps students with their schoolwork because they can share information and discuss projects in group chats.<br><br>However, spending too much time on smartphones can be bad for teenagers. Many students stay up late at night to watch videos or chat with friends. This causes them to lose sleep and feel very tired in class the next day. Sometimes, they cannot concentrate on their lessons and their grades drop.<br><br>Another problem is cyberbullying. Some people use the internet to leave unkind comments or spread fake rumours about others. This can make victims feel very sad and lonely. To stay safe, teenagers should not accept friend requests from strangers and should always tell an adult if someone is bothering them online. In conclusion, social media is a useful tool if we use it wisely. Parents and teachers should help teenagers manage their screen time.`
+                },
+                reading: [
+                    { q: "What do platforms like Instagram and TikTok allow teenagers to do?", a: "b", o: ["Only play games", "Connect with friends", "Buy cheap things", "Hide from their parents"] },
+                    { q: "How can social media help students with schoolwork?", a: "a", o: ["By discussing projects in group chats", "By copying answers online", "By playing music while studying", "By making the teachers happy"] },
+                    { q: "Why do some teenagers feel tired in class?", a: "c", o: ["They walk to school", "They study too hard", "They stay up late using their phones", "They do not eat breakfast"] },
+                    { q: "What happens when students lose sleep?", a: "b", o: ["They become smarter", "They cannot concentrate on their lessons", "They feel very hungry", "They get better grades"] },
+                    { q: "What is cyberbullying according to the text?", a: "c", o: ["Playing games online", "Buying things on the internet", "Leaving unkind comments or spreading rumours", "Adding new friends"] },
+                    { q: "How can cyberbullying make someone feel?", a: "a", o: ["Sad and lonely", "Happy and excited", "Tired and sleepy", "Brave and strong"] },
+                    { q: "What should a teenager do to stay safe online?", a: "d", o: ["Share their passwords", "Delete their accounts", "Fight back", "Tell an adult if someone bothers them"] },
+                    { q: "Who should a teenager not accept friend requests from?", a: "b", o: ["Their classmates", "Strangers", "Their family members", "Their teachers"] },
+                    { q: "What is the writer's conclusion about social media?", a: "c", o: ["It should be banned", "It is very dangerous for everyone", "It is a useful tool if used wisely", "Only adults should use it"] },
+                    { q: "What does the word 'wisely' mean in the last paragraph?", a: "a", o: ["Smartly and carefully", "Quickly", "Secretly", "Loudly"] }
+                ],
+                writing: {
+                    scramble: [
+                        { words: ["successful.", "highly", "project", "was", "new", "The"], a: "The new project was highly successful." },
+                        { words: ["hour.", "an", "waiting", "for", "over", "been", "have", "I"], a: "I have been waiting for over an hour." },
+                        { words: ["environment.", "the", "protect", "taken", "to", "be", "should", "Steps"], a: "Steps should be taken to protect the environment." },
+                        { words: ["because", "sick.", "did", "go", "He", "school", "to", "not", "was", "he"], a: "He did not go to school because he was sick." },
+                        { words: ["are", "their", "studying", "exams.", "students", "The", "hard", "final", "for"], a: "The students are studying hard for their final exams." }
+                    ],
+                    sentenceWords: ["important", "however", "chance", "necessary", "result"]
+                }
+            }
+        };
+
+        let currentForm = 'form1';
+
+        function startTest() {
+            const name = document.getElementById('student-name').value;
+            if(!name) { 
+                alert("Please enter your name first!"); 
+                return; 
+            }
+            
+            // Set the current form data
+            currentForm = document.getElementById('student-form').value;
+
+            document.getElementById('student-info').classList.add('hidden');
+            document.getElementById('main-test').classList.remove('hidden');
+            
+            loadTestData();
+        }
+
+        function loadTestData() {
+            const data = testData[currentForm];
+
+            // Render MCQs
+            renderSection('grammar', data.grammar, 'grammar-questions');
+            renderSection('vocab', data.vocab, 'vocab-questions');
+            renderSection('reading', data.reading, 'reading-questions');
+
+            // Render Error Correction Text (UASA Style)
+            document.getElementById('error-text').innerHTML = data.errorCorrection.text;
+            
+            let errorInputsHtml = `
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-700 w-6">0.</span>
+                    <input type="text" value="${data.errorCorrection.example}" disabled class="w-full border border-slate-300 bg-slate-100 rounded-md px-3 py-2 text-slate-500 font-medium">
+                </div>
+            `;
+            for (let i = 1; i <= 8; i++) {
+                errorInputsHtml += `
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-slate-700 w-6">${i}.</span>
+                        <input type="text" id="error-input-${i}" class="w-full border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 px-3 py-2 transition shadow-sm" placeholder="Word...">
+                    </div>
+                `;
+            }
+            document.getElementById('error-inputs').innerHTML = errorInputsHtml;
+
+            // Render Reading Text
+            document.getElementById('reading-text-container').innerHTML = `
+                <h4 class="font-bold text-blue-800">${data.readingText.title}</h4>
+                <p class="text-slate-700 leading-relaxed mt-2">${data.readingText.content}</p>
+            `;
+
+            // Render Writing Section (5 Scramble, 5 Sentences)
+            const wData = data.writing;
+            const writingHtml = `
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-6">
+                    <h4 class="font-bold text-lg text-slate-800 mb-2">A. Sentence Scramble (5 marks)</h4>
+                    <p class="text-sm text-slate-700 mb-4 bg-blue-50 p-3 rounded border border-blue-100 italic"><b>Instruction:</b> Rearrange the scrambled words to form a complete, correct sentence. Type your answer in the box provided.</p>
+                    ${wData.scramble.map((s, idx) => `
+                        <div class="mb-6">
+                            <p class="mb-2 text-sm font-semibold text-slate-700">Question ${idx + 1}</p>
+                            <div class="mb-2">
+                                ${s.words.map(w => `<span class="word-pill shadow-sm">${w}</span>`).join('')}
+                            </div>
+                            <input type="text" id="scramble-${idx}" class="w-full border-b-2 border-slate-300 focus:outline-none focus:border-blue-600 px-2 py-2 bg-slate-50 transition" placeholder="Type your sentence here...">
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-6">
+                    <h4 class="font-bold text-lg text-slate-800 mb-2">B. Make a Sentence (5 marks - Manual Marking)</h4>
+                    <p class="text-sm text-slate-700 mb-4 bg-blue-50 p-3 rounded border border-blue-100 italic"><b>Instruction:</b> Write one complete and grammatically correct sentence using the given word.</p>
+                    ${wData.sentenceWords.map((word, idx) => `
+                        <div class="mb-4">
+                            <p class="mb-2 text-sm text-slate-700 font-medium">${idx + 1}. Use the word: <span class="font-bold text-blue-700 uppercase tracking-wider bg-blue-50 px-2 py-1 rounded">${word}</span></p>
+                            <input type="text" id="sentence-${idx}" class="w-full border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 px-3 py-2 transition shadow-sm" placeholder="Your sentence...">
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('writing-content-container').innerHTML = writingHtml;
+        }
+
+        function renderSection(prefix, data, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = data.map((item, idx) => `
+                <div class="question-card bg-white p-4 rounded-lg shadow-sm border border-slate-100">
+                    <p class="font-medium text-slate-800 mb-3">${idx + 1}. ${item.q}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        ${item.o.map((opt, i) => {
+                            const val = String.fromCharCode(97 + i);
+                            return `
+                                <label class="flex items-center space-x-3 p-2 border rounded-md cursor-pointer hover:bg-blue-50 transition">
+                                    <input type="radio" name="${prefix}-${idx}" value="${val}" class="w-4 h-4 text-blue-600">
+                                    <span class="text-slate-700">${opt}</span>
+                                </label>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Cleans strings for fair comparison (removes punctuation, makes lowercase, removes extra spaces)
+        function cleanStringForScramble(str) {
+            return str.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").toLowerCase().replace(/\s{2,}/g," ").trim();
+        }
+
+       async function finishTest() {
+    if(!confirm("Are you sure you want to submit your test?")) return;
+
+    const data = testData[currentForm];
+    let gScore = 0;
+    let vScore = 0;
+    let eScore = 0;
+    let rScore = 0;
+    let wScore = 0;
+
+    // Calculate Scores
+    data.grammar.forEach((item, idx) => {
+        const sel = document.querySelector(`input[name="grammar-${idx}"]:checked`);
+        if(sel && sel.value === item.a) gScore++;
+    });
+    data.vocab.forEach((item, idx) => {
+        const sel = document.querySelector(`input[name="vocab-${idx}"]:checked`);
+        if(sel && sel.value === item.a) vScore++;
+    });
+    data.reading.forEach((item, idx) => {
+        const sel = document.querySelector(`input[name="reading-${idx}"]:checked`);
+        if(sel && sel.value === item.a) rScore++;
+    });
+    data.errorCorrection.answers.forEach((ansArray, idx) => {
+        const inputVal = document.getElementById(`error-input-${idx + 1}`).value.trim().toLowerCase();
+        if(ansArray.includes(inputVal)) eScore++;
+    });
+    data.writing.scramble.forEach((item, idx) => {
+        const input = document.getElementById(`scramble-${idx}`).value;
+        if(cleanStringForScramble(input) === cleanStringForScramble(item.a)) wScore++;
+    });
+
+    // Send Data
+    try {
+        await fetch("https://irfanhasif91.getform.com/gz1jm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                studentName: document.getElementById('student-name').value,
+                form: currentForm,
+                scoreGrammar: gScore,
+                scoreVocab: vScore,
+                scoreError: eScore,
+                scoreReading: rScore,
+                scoreWriting: wScore
+            })
+        });
+    } catch (err) { console.error(err); }
+
+    // Update UI
+    document.getElementById('main-test').classList.add('hidden');
+    document.getElementById('results').classList.remove('hidden');
+    document.getElementById('res-name').innerText = document.getElementById('student-name').value;
+    document.getElementById('res-form').innerText = { 'form1': 'Form 1', 'form2': 'Form 2', 'form3': 'Form 3' }[currentForm];
+    document.getElementById('score-grammar').innerText = `${gScore} / 15`;
+    document.getElementById('score-vocab').innerText = `${vScore} / 15`;
+    document.getElementById('score-error').innerText = `${eScore} / 8`;
+    document.getElementById('score-reading').innerText = `${rScore} / 10`;
+    document.getElementById('score-writing').innerText = `${wScore} / 5`;
+    
+    // Teacher Analysis
+    document.getElementById('teacher-analysis').innerHTML = `<p><strong>Language Awareness:</strong> ${gScore < 8 ? 'Requires intervention.' : 'Solid grasp.'}</p>`;
+}
+    </script>
+</body>
+</html>
