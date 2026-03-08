@@ -525,47 +525,75 @@
             if(!confirm("Are you sure you want to submit your test?")) return;
 
             const data = testData[currentForm];
-            let gScore = 0;
-            let vScore = 0;
-            let eScore = 0;
-            let rScore = 0;
-            let wScore = 0;
+            let gScore = 0, vScore = 0, eScore = 0, rScore = 0, wScore = 0;
 
-            // Calculate Scores
+            // Objects to capture the student's exact text/selections
+            let studentAnswers = {
+                grammar: {},
+                vocab: {},
+                reading: {},
+                errorCorrection: {},
+                writingScramble: {},
+                writingSentences: {}
+            };
+
+            // 1. Calculate Grammar Scores & Save Answers
             data.grammar.forEach((item, idx) => {
                 const sel = document.querySelector(`input[name="grammar-${idx}"]:checked`);
+                studentAnswers.grammar[`Question_${idx + 1}`] = sel ? sel.value : "No answer selected";
                 if(sel && sel.value === item.a) gScore++;
             });
+
+            // 2. Calculate Vocab Scores & Save Answers
             data.vocab.forEach((item, idx) => {
                 const sel = document.querySelector(`input[name="vocab-${idx}"]:checked`);
+                studentAnswers.vocab[`Question_${idx + 1}`] = sel ? sel.value : "No answer selected";
                 if(sel && sel.value === item.a) vScore++;
             });
+
+            // 3. Calculate Reading Scores & Save Answers
             data.reading.forEach((item, idx) => {
                 const sel = document.querySelector(`input[name="reading-${idx}"]:checked`);
+                studentAnswers.reading[`Question_${idx + 1}`] = sel ? sel.value : "No answer selected";
                 if(sel && sel.value === item.a) rScore++;
             });
+
+            // 4. Calculate Error Correction Scores & Save Typed Text
             data.errorCorrection.answers.forEach((ansArray, idx) => {
-                const inputVal = document.getElementById(`error-input-${idx + 1}`).value.trim().toLowerCase();
-                if(ansArray.includes(inputVal)) eScore++;
+                const inputVal = document.getElementById(`error-input-${idx + 1}`).value.trim();
+                studentAnswers.errorCorrection[`Error_${idx + 1}`] = inputVal || "Blank";
+                if(ansArray.includes(inputVal.toLowerCase())) eScore++;
             });
+
+            // 5. Calculate Scramble Scores & Save Typed Text
             data.writing.scramble.forEach((item, idx) => {
-                const input = document.getElementById(`scramble-${idx}`).value;
+                const input = document.getElementById(`scramble-${idx}`).value.trim();
+                studentAnswers.writingScramble[`Scramble_${idx + 1}`] = input || "Blank";
                 if(window.cleanStringForScramble(input) === window.cleanStringForScramble(item.a)) wScore++;
             });
 
-            // Send to Firebase
+            // 6. Save "Make a Sentence" text for manual teacher review
+            data.writing.sentenceWords.forEach((word, idx) => {
+                const input = document.getElementById(`sentence-${idx}`).value.trim();
+                studentAnswers.writingSentences[`Word_${word}`] = input || "Blank";
+            });
+
+            // Send EVERYTHING to Firebase
             try {
                 await push(ref(db, 'submissions/'), {
                     studentName: document.getElementById('student-name').value,
                     form: currentForm,
-                    scoreGrammar: gScore,
-                    scoreVocab: vScore,
-                    scoreError: eScore,
-                    scoreReading: rScore,
-                    scoreWriting: wScore,
+                    scores: {
+                        grammar: gScore,
+                        vocab: vScore,
+                        error: eScore,
+                        reading: rScore,
+                        writingScramble: wScore
+                    },
+                    answers: studentAnswers, 
                     timestamp: new Date().toISOString()
                 });
-                console.log("Data successfully saved to Firebase!");
+                console.log("Scores and detailed answers successfully saved to Firebase!");
             } catch (err) {
                 console.error("Firebase error: ", err);
                 alert("There was an issue saving your data: " + err.message);
